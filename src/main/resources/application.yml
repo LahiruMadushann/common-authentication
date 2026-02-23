@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: jdbc:postgresql://appraisal-back-dev.c3gf9qrppzeo.ap-northeast-1.rds.amazonaws.com:5432/lump_sum_appraisal_ctn_develop
+    username: lump_sum_appraisal_ctn
+    password: WQvSiqXR4rU6D6fgnRPp
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 20
+
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+mybatis:
+  mapper-locations: classpath:com.ctn.commonauthentication.infrastructure.repository/*.xml
+  type-aliases-package: com.ctn.commonauthentication.dto
+
+# JWT Configuration
+jwt:
+  secret: ctn-appraisal-secure-jwt-secret-key-256-bits-minimum-change-in-production-environment
+  access-token-expiration: 900000          # 15 minutes in milliseconds
+  refresh-token-expiration: 2592000000     # 30 days in milliseconds
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 10800
+      cookie:
+        max-age: 10800
+
+# Logging
+logging:
+  level:
+    com.ctn.appraisal: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    try-it-out-enabled: true
+    disable-swagger-default-url: true
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: Authentication API Documentation
+  packages-to-scan: com.ctn.appraisal
+  paths-to-match: /api/auth/**
+
+apis:
+  cpass:
+    enabled: true # if false, the cpass service will be disabled and SNS will be used
+    token: qtMpkuirkYtrfHoOLX6F1g1nelbnh00CWtdF8DE7Opo
+    url: https://cpaasnow.com/api/v1
+  ai-matching:
+    url: https://r07l8pd6s5.execute-api.ap-northeast-1.amazonaws.com/Stage/v1/matching/requests
+    token: p7X4d9L2q6V8r1B5m3Z0n7K4w8S2t9H5y1G3
+  ai-buyer:
+    url: https://r07l8pd6s5.execute-api.ap-northeast-1.amazonaws.com/Stage/v1/stores
+    token: p7X4d9L2q6V8r1B5m3Z0n7K4w8S2t9H5y1G3
+  ai-final-offer:
+    url: https://r07l8pd6s5.execute-api.ap-northeast-1.amazonaws.com/Stage/v1/appraisals/requests
+    token: p7X4d9L2q6V8r1B5m3Z0n7K4w8S2t9H5y1G3

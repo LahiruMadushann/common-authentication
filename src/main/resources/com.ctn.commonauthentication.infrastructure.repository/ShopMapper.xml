@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ctn.commonauthentication.repository.ShopMapper">
+    <resultMap id="AssessmentShopNames"
+               type="com.ctn.commonauthentication.entity.AssessmentShopNames">
+        <id column="appraisalid" />
+        <collection property="shops" ofType="com.ctn.commonauthentication.entity.ShopTitle"
+                    columnPrefix="shop_">
+            <result property="name" column="name" />
+            <result property="assessed_datetime" column="assessed_datetime" />
+            <result property="is_rejected_by_shop" column="is_rejected_by_shop" />
+            <result property="assessed_status" column="assessed_status" />
+            <result property="reasonForEditPriceBuyer" column="reason_for_edit_price_buyer" />
+            <result property="reasonForEditPriceSeller" column="reason_for_edit_price_seller" />
+            <result property="adminPurchasePrice" column="admin_purchase_price" />
+            <result property="adminPurchaseDateTime" column="admin_purchase_date_time" />
+            <result property="adminEditReason" column="admin_edit_reason" />
+            <result property="sendToAISystem" column="send_to_ai_system" />
+            <result property="storePurchaseDateTime" column="store_purchase_date_time" />
+            <result property="userPurchaseDateTime" column="user_purchase_date_time" />
+            <result property="value" column="value" />
+            <result property="finalOffer" column="final_offer" />
+            <association property="shopid">
+                <id property="content" column="shopid" />
+            </association>
+        </collection>
+    </resultMap>
+</mapper>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ctn.commonauthentication.util.AppraisalRequestMapper">
+
+    <resultMap id="AppraisalID" type="com.ctn.commonauthentication.dto.AppraisalID">
+        <id column="appraisalid"/>
+        <id property="content" column="appraisalid"/>
+    </resultMap>
+
+    <resultMap id="Customer" type="com.ctn.commonauthentication.dto.Customer">
+        <id column="appraisalid"/>
+        <result property="name" column="customer_name"/>
+        <result property="post_number" column="customer_post_number"/>
+        <result property="prefecture" column="customer_prefecture"/>
+        <result property="municipalities" column="customer_municipalities"/>
+        <result property="address" column="customer_address"/>
+        <result property="address_detail" column="customer_address_detail"/>
+        <association property="phone">
+            <id column="appraisalid"/>
+            <result property="content" column="customer_phone"/>
+        </association>
+        <association property="email">
+            <id column="appraisalid"/>
+            <result property="content" column="customer_email"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="AssessmentDateList" type="com.ctn.commonauthentication.dto.AssessmentDateList">
+        <id column="appraisalid"/>
+        <collection property="content" ofType="com.ctn.commonauthentication.dto.CTNDateTime">
+            <id column="assessment_date_id"/>
+            <result property="content" column="assessment_date"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="AssessedInvoice" type="com.ctn.commonauthentication.entity.AssessedInvoice">
+        <id column="appraisalid" property="appraisalId" />
+        <result column="shopid" property="shopId" />
+        <result column="assessed_datetime" property="assessedDateTime" />
+        <result column="email_sent_time" property="emailSendTime" />
+        <result column="draft_email_sent_time" property="draftEmailSendTime" />
+        <result column="assessed_ex" property="ex" />
+        <result property="assessedStatus" column="assessed_status"/>
+        <result property="reject" column="is_rejected_by_shop"/>
+    </resultMap>
+
+    <resultMap id="Car" type="com.ctn.commonauthentication.dto.Car">
+        <id column="appraisalid"/>
+        <result property="car_type" column="car_type"/>
+        <result property="car_maker" column="car_maker"/>
+        <result property="car_model_year" column="car_model_year"/>
+        <result property="car_traveled_distance" column="car_traveled_distance"/>
+        <result property='body_type' column="body_type" />
+        <result property="inspect_remain" column="inspect_remain"/>
+        <result property="car_state" column="car_state"/>
+        <result property="runnable" column="runnable"/>
+        <result property="wheel_drive" column="wheel_drive"/>
+        <result property="fuel" column="fuel"/>
+        <result property="shift" column="shift"/>
+        <result property="accident" column="accident"/>
+        <result property="displacement" column="displacement"/>
+        <result property="body_color" column="body_color"/>
+        <result property="loan" column="loan"/>
+        <result property="desire_date" column="desire_date"/>
+        <result property="grade" column="grade"/>
+        <result property="exterior" column="exterior"/>
+        <result property="scratch" column="scratch"/>
+        <result property="dent" column="dent"/>
+        <result property="peel" column="peel"/>
+        <result property="rust" column="rust"/>
+        <result property="interior" column="interior"/>
+        <result property="dirt" column="dirt"/>
+        <result property="tear" column="tear"/>
+        <result property="air_conditioning" column="air_conditioning"/>
+        <result property="smoke" column="smoke"/>
+        <result property="navigation" column="navigation"/>
+        <result property="auto_slide" column="auto_slide"/>
+        <result property="leather_sheet" column="leather_sheet"/>
+        <result property="handle_type" column="handle_type"/>
+        <result property="back_monitor" column="back_monitor"/>
+        <result property="sunroof" column="sunroof"/>
+        <result property="wheel" column="wheel"/>
+
+        <collection property="body_types" ofType="java.lang.String">
+            <result column="body_type"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="AppraisalSupplement" type="com.ctn.commonauthentication.dto.AppraisalSupplement">
+        <result property="note" column="note"/>
+        <result property="message_for_matching_shop" column="message_for_matching_shop"/>
+        <result property="ip" column="ip"/>
+        <result property="param" column="param"/>
+        <result property="requestYMD" column="request_ymd"/>
+    </resultMap>
+
+    <resultMap id="OperatorAppraisal" type="com.ctn.commonauthentication.dto.OperatorAppraisal">
+        <id column="appraisalid"/>
+        <result property="status" column="status" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="type" column="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="saved_utm_param" column="saved_utm_param"></result>
+        <result property="fpc" column="fpc"></result>
+        <result property="isTestData" column="is_test_data" javaType="java.lang.Boolean" jdbcType="VARCHAR" ></result>
+        <result property="test_email_sent" column="test_email_sent"></result>
+        <result property="ip" column="ip"></result>
+        <association property="appraisalid"  resultMap="AppraisalID" />
+        <association property="customer" resultMap="Customer" />
+        <association property="car" resultMap="Car" />
+        <association property="aDates" resultMap="AssessmentDateList" />
+        <association property="supplement" resultMap="AppraisalSupplement" />
+        <association property="shops" resultMap="com.ctn.commonauthentication.repository.ShopMapper.AssessmentShopNames" />
+        <association property="assessed" resultMap="AssessedInvoice" />
+
+        <!--  <association property="billingData" resultMap="BillingDataInvoice" />-->
+    </resultMap>
+
+    <select id="loadAppraisalById" resultMap="OperatorAppraisal">
+        <include refid="load_full_appraisal_by_id" />
+    </select>
+</mapper>
