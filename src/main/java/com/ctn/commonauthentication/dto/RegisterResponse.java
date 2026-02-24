@@ -9,10 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterResponse {
-    private boolean success;
 
-    @JsonProperty("already_existed")
-    private boolean alreadyExisted;
+    @JsonProperty("user_id")
+    private String userId;
 
-    private String message;
+    private String email;
+
+    private String status;
 }

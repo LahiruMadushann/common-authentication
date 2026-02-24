@@ -1,13 +1,14 @@
 package com.ctn.commonauthentication.authService;
 
-import com.ctn.commonauthentication.LoginResponse;
+import com.ctn.commonauthentication.dto.LoginResponse;
 import com.ctn.commonauthentication.dto.*;
 import com.ctn.commonauthentication.entity.GlobalUser;
-import com.ctn.commonauthentication.entity.UserModel;
+import com.ctn.commonauthentication.entity.UserProfile;
 import com.ctn.commonauthentication.repository.GlobalUserRepository;
-import com.ctn.commonauthentication.repository.UserModelRepository;
+import com.ctn.commonauthentication.repository.UserProfileRepository;
 import com.ctn.commonauthentication.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,12 +21,13 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final GlobalUserRepository userRepository;
-    private final UserModelRepository userModelRepository;
+    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
@@ -34,8 +36,7 @@ public class AuthService {
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
-        );
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
         GlobalUser user = userRepository.findByEmail(loginRequest.getEmail())
@@ -45,27 +46,22 @@ public class AuthService {
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
         user.setToken(refreshToken);
-        user.setCreatedAt(LocalDateTime.now());
         user.setExpiresAt(LocalDateTime.now().plusDays(30));
         user.setRevoked(false);
         userRepository.save(user);
 
-        UserModel userModel = userModelRepository.findByUserId(user.getEmail())
-                .orElse(null);
-        Integer userId = userModel != null ? userModel.getId() : null;
-
-        return new LoginResponse(accessToken, refreshToken, jwtUtil.getAccessTokenValidityInSeconds(), userId);
+        return new LoginResponse(accessToken, refreshToken, jwtUtil.getAccessTokenValidityInSeconds());
     }
 
     @Transactional
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
-        String refreshToken = request.getRefreshToken();
+    public LoginResponse refreshToken(RefreshTokenRequest request) {
+        String incomingRefreshToken = request.getRefreshToken();
 
-        if (!jwtUtil.validateRefreshToken(refreshToken)) {
+        if (!jwtUtil.validateRefreshToken(incomingRefreshToken)) {
             throw new RuntimeException("Invalid or expired refresh token");
         }
 
-        GlobalUser user = userRepository.findByToken(refreshToken)
+        GlobalUser user = userRepository.findByToken(incomingRefreshToken)
                 .orElseThrow(() -> new RuntimeException("Refresh token not found"));
 
         if (user.getRevoked() || user.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -74,21 +70,25 @@ public class AuthService {
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String newAccessToken = jwtUtil.generateAccessToken(userDetails, user.getRole().name());
+        // Rotate the refresh token for improved security
+        String newRefreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
-        return new RefreshTokenResponse(newAccessToken, jwtUtil.getAccessTokenValidityInSeconds());
+        user.setToken(newRefreshToken);
+        user.setExpiresAt(LocalDateTime.now().plusDays(30));
+        user.setRevoked(false);
+        userRepository.save(user);
+
+        return new LoginResponse(newAccessToken, newRefreshToken, jwtUtil.getAccessTokenValidityInSeconds());
     }
 
     @Transactional
-    public ApiResponse logout(LogoutRequest request) {
-        String refreshToken = request.getRefreshToken();
-
-        GlobalUser user = userRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+    public void logout(String email) {
+        GlobalUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setRevoked(true);
+        user.setToken(null);
         userRepository.save(user);
-
-        return new ApiResponse(true, "User has been logged out successfully.");
     }
 
     @Transactional
@@ -96,64 +96,115 @@ public class AuthService {
         Optional<GlobalUser> existingUser = userRepository.findByEmail(request.getEmail());
 
         if (existingUser.isPresent()) {
-            // Per spec: if email already exists, return success with already_existed=true
-            // In production, send login page URL to the registered email
-            return new RegisterResponse(true, true,
-                    "Account already exists. A login page URL has been sent to the registered email address.");
+            GlobalUser existing = existingUser.get();
+            String existingUserId = "usr_" + existing.getId();
+            return new RegisterResponse(existingUserId, existing.getEmail(), "ALREADY_EXISTS");
         }
 
         GlobalUser user = new GlobalUser();
         user.setEmail(request.getEmail());
-        user.setName(request.getName());
-        user.setPhoneNumber(request.getPhoneNumber());
-        user.setPostalCode(request.getPostalCode());
-        user.setPrefecture(request.getPrefecture());
-        user.setCity(request.getCity());
-
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-        } else {
-            // Per spec: if no password, send login URL for user to set password
-            // Set a temporary random password that cannot be used directly
-            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-        }
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setStatus(GlobalUser.Status.ACTIVE);
 
         try {
-            user.setRole(GlobalUser.Role.valueOf(request.getRole().toUpperCase()));
+            user.setSourceSystem(GlobalUser.SourceSystem.valueOf(request.getSourceSystem().toUpperCase()));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Invalid source_system. Must be SALES or PURCHASE");
+        }
+
+        String role = (request.getRole() != null && !request.getRole().isBlank()) ? request.getRole() : "USER";
+        try {
+            user.setRole(GlobalUser.Role.valueOf(role.toUpperCase()));
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid role. Must be USER, BUYER, or ADMIN");
+            throw new IllegalArgumentException("Invalid role. Must be USER");
         }
 
         user.setRevoked(false);
-        userRepository.save(user);
+        GlobalUser savedUser = userRepository.save(user);
 
-        // In production, send login URL email to user
-        return new RegisterResponse(true, false,
-                "Account registered. A login URL has been sent to the user's email address.");
+        UserProfile profile = new UserProfile();
+        profile.setGlobalUser(savedUser);
+        profile.setName(request.getName());
+
+        // Strip non-numeric characters from the phone number before saving
+        String phone = request.getPhone();
+        if (phone != null) {
+            phone = phone.replaceAll("[^0-9]", "");
+        }
+        profile.setPhoneNumber(phone);
+
+        // Strip non-numeric characters from the postal code before saving
+        String postalCode = request.getPostalCode();
+        if (postalCode != null) {
+            postalCode = postalCode.replaceAll("[^0-9]", "");
+        }
+        profile.setPostalCode(postalCode);
+        profile.setPrefecture(request.getPrefecture());
+        profile.setCity(request.getCity());
+        userProfileRepository.save(profile);
+
+        String userId = "usr_" + savedUser.getId();
+        return new RegisterResponse(userId, savedUser.getEmail(), "REGISTERED");
     }
 
-    public UserResponse getUserByEmail(String email) {
+    public UserProfileResponse getUserProfile(String email) {
         GlobalUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        UserResponse.UserData userData = new UserResponse.UserData(
-                user.getName(),
-                user.getEmail(),
-                user.getPhoneNumber(),
-                user.getPostalCode(),
-                user.getPrefecture(),
-                user.getCity(),
-                user.getRole().name(),
-                user.getCreatedAt()
-        );
+        UserProfile profile = userProfileRepository.findByGlobalUser(user).orElse(null);
 
-        return new UserResponse(true, userData);
+        return new UserProfileResponse(
+                String.valueOf(user.getId()),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getStatus() != null ? user.getStatus().name() : GlobalUser.Status.ACTIVE.name(),
+                profile != null ? profile.getName() : null,
+                profile != null ? profile.getPhoneNumber() : null,
+                profile != null ? profile.getPostalCode() : null,
+                profile != null ? profile.getPrefecture() : null,
+                profile != null ? profile.getCity() : null);
     }
 
-    public ApiResponse resetPassword(PasswordResetRequest request) {
-        // Per spec: always return 200 OK regardless of whether email exists
-        // to prevent account enumeration
-        // In production, if user exists, send password reset email
-        return new ApiResponse(true, "Password reset email has been sent to the registered email address.");
+    @Transactional
+    public void forgotPassword(PasswordForgotRequest request) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
+        Optional<GlobalUser> userOpt = userRepository.findByEmail(request.getEmail());
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("USER_NOT_FOUND");
+        }
+
+        GlobalUser user = userOpt.get();
+        String resetToken = UUID.randomUUID().toString();
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetExpiresAt(LocalDateTime.now().plusHours(24));
+        userRepository.save(user);
+
+        // In production: send email with reset token via AWS SES
+        log.info("[PASSWORD RESET] Token for {}: {}", user.getEmail(), resetToken);
+    }
+
+    @Transactional
+    public void resetPassword(PasswordResetExecuteRequest request) {
+        GlobalUser user = userRepository.findByPasswordResetToken(request.getToken())
+                .orElseThrow(() -> new RuntimeException("INVALID_TOKEN"));
+
+        if (!user.getEmail().equals(request.getEmail())) {
+            throw new RuntimeException("INVALID_TOKEN");
+        }
+
+        if (user.getPasswordResetExpiresAt() == null
+                || user.getPasswordResetExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("EXPIRED_TOKEN");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiresAt(null);
+        user.setRevoked(true);
+        user.setToken(null);
+        userRepository.save(user);
     }
 }

@@ -1,4 +1,4 @@
-package com.ctn.commonauthentication;
+package com.ctn.commonauthentication.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -16,9 +16,16 @@ public class LoginResponse {
     @JsonProperty("refresh_token")
     private String refreshToken;
 
+    @JsonProperty("token_type")
+    private String tokenType;
+
     @JsonProperty("expires_in")
     private long expiresIn;
 
-    @JsonProperty("userId")
-    private Integer userId;
+    public LoginResponse(String accessToken, String refreshToken, long expiresIn) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.tokenType = "Bearer";
+        this.expiresIn = expiresIn;
+    }
 }

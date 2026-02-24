@@ -1,7 +1,7 @@
 package com.ctn.commonauthentication.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,27 +11,29 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisterRequest {
 
-    @NotBlank(message = "Name is required")
-    private String name;
-
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
     private String email;
 
+    @NotBlank(message = "Password is required")
+    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$", message = "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character")
     private String password;
 
-    @NotBlank(message = "Phone number is required")
-    private String phoneNumber;
+    @NotBlank(message = "Source system is required")
+    @JsonProperty("source_system")
+    private String sourceSystem;
 
-    @NotBlank(message = "Postal code is required")
+    private String name;
+
+    private String phone;
+
+    @JsonProperty("postal_code")
     private String postalCode;
 
-    @NotBlank(message = "Prefecture is required")
     private String prefecture;
 
-    @NotBlank(message = "City is required")
-    private String city;
-
-    @NotBlank(message = "Role is required")
     private String role;
+
+    private String city;
 }

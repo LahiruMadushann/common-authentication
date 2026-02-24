@@ -3,7 +3,6 @@ package com.ctn.commonauthentication.config;
 import com.ctn.commonauthentication.security.CustomUserDetailsService;
 import com.ctn.commonauthentication.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -85,8 +84,9 @@ public class SecurityConfig {
                 "https://ad5-test.ctn-net.jp",
                 "https://inse-test.ctn-net.jp",
                 "https://ctn-demo.com",
-                "http://localhost:5173/"
-        ));
+                "http://localhost:5173/",
+                "http://localhost:3000",
+                "http://localhost:8080"));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -105,22 +105,21 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints (no authentication required)
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/refresh",
-                                "/api/v1/auth/password-reset",
-                                "/api/v1/auth/logout"
-                        ).permitAll()
+                                "/api/v1/auth/password/forgot",
+                                "/api/v1/auth/password/reset")
+                        .permitAll()
+                        // Swagger / OpenAPI docs
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/sales/**").hasAnyRole("SALES", "ADMIN")
-                        .requestMatchers("/api/purchase/**").hasAnyRole("PURCHASE", "ADMIN")
-                        .anyRequest().authenticated()
-                )
+                        // Protected endpoints (BearerAuth required)
+                        // /api/v1/auth/logout and /api/v1/auth/me go through JWT filter
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

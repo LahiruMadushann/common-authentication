@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GlobalUser {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,21 +24,6 @@ public class GlobalUser {
 
     @Column(name = "password")
     private String password;
-
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "phone_number")
-    private String phoneNumber;
-
-    @Column(name = "postal_code")
-    private String postalCode;
-
-    @Column(name = "prefecture")
-    private String prefecture;
-
-    @Column(name = "city")
-    private String city;
 
     @Column(name = "token")
     private String token;
@@ -53,12 +39,36 @@ public class GlobalUser {
     @Column(name = "role", nullable = false, length = 50)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private Status status = Status.ACTIVE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_system", length = 20)
+    private SourceSystem sourceSystem;
+
     @Column(name = "revoked", nullable = false)
     private Boolean revoked = false;
+
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_expires_at")
+    private LocalDateTime passwordResetExpiresAt;
 
     public enum Role {
         ADMIN,
         USER,
-        BUYER
+        SHOP
+    }
+
+    public enum Status {
+        ACTIVE,
+        DEACTIVE
+    }
+
+    public enum SourceSystem {
+        SALES,
+        PURCHASE
     }
 }

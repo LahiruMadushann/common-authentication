@@ -14,4 +14,6 @@ public interface GlobalUserRepository extends JpaRepository<GlobalUser, Long> {
     Optional<GlobalUser> findByToken(String token);
 
     boolean existsByEmail(String email);
+
+    Optional<GlobalUser> findByPasswordResetToken(String passwordResetToken);
 }
