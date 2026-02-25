@@ -28,7 +28,7 @@ public class JwtUtil {
     private long REFRESH_TOKEN_VALIDITY;
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = io.jsonwebtoken.io.Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

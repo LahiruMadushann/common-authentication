@@ -1,11 +1,13 @@
 spring:
   application:
     name: auth-service
+  config:
+    import: optional:file:.env[.properties]
 
   datasource:
-    url: jdbc:postgresql://appraisal-back-dev.c3gf9qrppzeo.ap-northeast-1.rds.amazonaws.com:5432/lump_sum_appraisal_ctn_develop
-    username: lump_sum_appraisal_ctn
-    password: WQvSiqXR4rU6D6fgnRPp
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 50
@@ -25,7 +27,7 @@ mybatis:
 
 # JWT Configuration
 jwt:
-  secret: ctn-appraisal-secure-jwt-secret-key-256-bits-minimum-change-in-production-environment
+  secret: ${JWT_SECRET:t2o705W+MCs4Soz7Etjf4PbzzAMU9gqKX8WJGtG1Wb/M=}
   access-token-expiration: 900000          # 15 minutes in milliseconds
   refresh-token-expiration: 2592000000     # 30 days in milliseconds
 
@@ -66,14 +68,14 @@ springdoc:
 apis:
   cpass:
     enabled: true # if false, the cpass service will be disabled and SNS will be used
-    token: qtMpkuirkYtrfHoOLX6F1g1nelbnh00CWtdF8DE7Opo
+    token: ${CPASS_TOKEN}
     url: https://cpaasnow.com/api/v1
   ai-matching:
     url: https://r07l8pd6s5.execute-api.ap-northeast-1.amazonaws.com/Stage/v1/matching/requests
-    token: p7X4d9L2q6V8r1B5m3Z0n7K4w8S2t9H5y1G3
+    token: ${AI_API_TOKEN}
   ai-buyer:
     url: https://r07l8pd6s5.execute-api.ap-northeast-1.amazonaws.com/Stage/v1/stores
-    token: p7X4d9L2q6V8r1B5m3Z0n7K4w8S2t9H5y1G3
+    token: ${AI_API_TOKEN}
   ai-final-offer:
     url: https://r07l8pd6s5.execute-api.ap-northeast-1.amazonaws.com/Stage/v1/appraisals/requests
-    token: p7X4d9L2q6V8r1B5m3Z0n7K4w8S2t9H5y1G3
+    token: ${AI_API_TOKEN}
