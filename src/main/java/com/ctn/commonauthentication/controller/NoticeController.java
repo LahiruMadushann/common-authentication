@@ -7,7 +7,9 @@ import com.ctn.commonauthentication.serviceImpl.NoticeAccessManager;
 import com.ctn.commonauthentication.util.enums.NoticeCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
 public class NoticeController {
 
     private final INoticeService noticeService;
+    private final NoticeAccessManager noticeAccessManager;
 
     @GetMapping("/private")
     public ResponseEntity<Page<Notice>> getAllNotices(@RequestParam(value = "category", required = false) NoticeCategory category,
@@ -46,5 +49,23 @@ public class NoticeController {
         }
 
         return ResponseEntity.ok(notice.get());
+    }
+
+    @GetMapping()
+    public ResponseEntity<Page<PublicNoticeDto>> getPublicNotices(@RequestParam(value = "noDefaults", required = false) boolean noDefaults, Pageable pageable) {
+
+        //default sort
+        if (!noDefaults) {
+            if (pageable.getSort().isEmpty()) {
+
+                pageable = PageRequest.of(
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        Sort.by(Sort.Direction.DESC, "isPin", "updatedLast")
+                );
+            }
+        }
+
+        return ResponseEntity.ok(noticeService.getPublicNotices(noticeAccessManager.getAccessibleCategories(), pageable));
     }
 }

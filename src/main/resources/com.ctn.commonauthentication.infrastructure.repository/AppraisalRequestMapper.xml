@@ -114,6 +114,79 @@
         <!--  <association property="billingData" resultMap="BillingDataInvoice" />-->
     </resultMap>
 
+    <sql id="appraisal_columns">
+      appraisal_request.appraisalid  as appraisalid ,
+      appraisal_request.status  as status ,
+      appraisal_request.type  as type ,
+      appraisal_request.customer_phone as customer_phone,
+      appraisal_request.customer_name as customer_name,
+      appraisal_request.customer_email as customer_email,
+      appraisal_request.customer_post_number as customer_post_number,
+      appraisal_request.customer_prefecture as customer_prefecture,
+      appraisal_request.customer_municipalities as customer_municipalities,
+      appraisal_request.customer_address as customer_address,
+      appraisal_request.customer_address_detail as customer_address_detail,
+      appraisal_request.car_type as car_type,
+      appraisal_request.car_maker as car_maker,
+      appraisal_request.car_model_year as car_model_year,
+      appraisal_request.car_traveled_distance as car_traveled_distance,
+      appraisal_request.inspect_remain as inspect_remain,
+      appraisal_request.car_state as car_state,
+      appraisal_request.runnable as runnable,
+      appraisal_request.wheel_drive as wheel_drive,
+      appraisal_request.fuel as fuel,
+      appraisal_request.shift as shift,
+      appraisal_request.accident as accident,
+      appraisal_request.displacement as displacement,
+      appraisal_request.body_color as body_color,
+      appraisal_request.loan as loan,
+      appraisal_request.desire_date as desire_date,
+      appraisal_request.grade as grade,
+      appraisal_request.exterior as exterior,
+      appraisal_request.scratch as scratch,
+      appraisal_request.dent as dent,
+      appraisal_request.peel as peel,
+      appraisal_request.rust as rust,
+      appraisal_request.interior as interior,
+      appraisal_request.dirt as dirt,
+      appraisal_request.tear as tear,
+      appraisal_request.air_conditioning as air_conditioning,
+      appraisal_request.smoke as smoke,
+      appraisal_request.navigation as navigation,
+      appraisal_request.auto_slide as auto_slide,
+      appraisal_request.leather_sheet as leather_sheet,
+      appraisal_request.handle_type as handle_type,
+      appraisal_request.back_monitor as back_monitor,
+      appraisal_request.sunroof as sunroof,
+      appraisal_request.wheel as wheel,
+      appraisal_request.note as note,
+      appraisal_request.param as param,
+      appraisal_request.message_for_matching_shop as message_for_matching_shop,
+      appraisal_request.request_ymd as request_ymd,
+      appraisal_request.saved_utm_param as saved_utm_param,
+      appraisal_request.fpc as fpc,
+      appraisal_request.test_email_sent as test_email_sent,
+      appraisal_request.ip as ip
+    </sql>
+
+    <sql id="load_full_appraisal_by_id">
+        select
+        <include refid="appraisal_columns" />
+        ,
+        body_type_master.body_type as body_type,
+        shops.shopid as shop_shopid,
+        shops.name as shop_name,
+        assessment_date.assessment_date_id as assessment_date_id,
+        assessment_date.assessment_date as assessment_date
+        from appraisal_request
+        left outer join assessment_date on appraisal_request.appraisalid = assessment_date.appraisalid
+        left outer join assessed on assessed.appraisalid = appraisal_request.appraisalid
+        left outer join shops on assessed.shopid = shops.shopid
+        left outer join body_type_master on appraisal_request.car_type = body_type_master.car_type
+        where appraisal_request.appraisalid = #{id}
+        order by appraisalid
+    </sql>
+
     <select id="loadAppraisalById" resultMap="OperatorAppraisal">
         <include refid="load_full_appraisal_by_id" />
     </select>

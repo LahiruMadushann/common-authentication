@@ -16,7 +16,7 @@ public class AssessedPreviewDto {
     private Integer shopid;
     private Timestamp email_sent_time;
     private Timestamp draft_email_sent_time;
-    private boolean is_rejected_by_shop;
+    private Boolean is_rejected_by_shop;
     private String assessedEx;
     private Timestamp updatedAt;
     private String status;

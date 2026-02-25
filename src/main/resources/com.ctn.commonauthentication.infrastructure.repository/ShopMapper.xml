@@ -2,9 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ctn.commonauthentication.repository.ShopMapper">
     <resultMap id="AssessmentShopNames"
-               type="com.ctn.commonauthentication.entity.AssessmentShopNames">
+               type="com.ctn.commonauthentication.dto.AssessmentShopNames">
         <id column="appraisalid" />
-        <collection property="shops" ofType="com.ctn.commonauthentication.entity.ShopTitle"
+        <collection property="shops" ofType="com.ctn.commonauthentication.dto.ShopTitle"
                     columnPrefix="shop_">
             <result property="name" column="name" />
             <result property="assessed_datetime" column="assessed_datetime" />

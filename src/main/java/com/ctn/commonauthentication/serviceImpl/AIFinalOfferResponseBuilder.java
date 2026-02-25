@@ -49,8 +49,7 @@ public class AIFinalOfferResponseBuilder {
         ShopDetailsDto shopDetails = finalOfferDetailsService.ShopDetails(assessed.getId().getShopid());
         FinalOfferShopDetailsDto finalOfferShopDetails = assessedRepository.findFinalOfferShopDetails(
                 assessed.getId().getShopid(),
-                assessed.getId().getAppraisalid()
-        );
+                assessed.getId().getAppraisalid());
 
         return StoreFinalOffer.builder()
                 .storeId(shopDetails.getStoreId())
@@ -94,9 +93,11 @@ public class AIFinalOfferResponseBuilder {
         }
 
         return Purchase.builder()
-                .purchaseAmount(assessed.getAdminPurchasePrice() != null ? assessed.getAdminPurchasePrice().longValue() : null)
-                .purchaseDate(assessed.getAdminPurchaseDateTime() != null ?
-                        assessed.getAdminPurchaseDateTime().toLocalDate() : null)
+                .purchaseAmount(
+                        assessed.getAdminPurchasePrice() != null ? assessed.getAdminPurchasePrice().longValue() : null)
+                .purchaseDate(
+                        assessed.getAdminPurchaseDateTime() != null ? assessed.getAdminPurchaseDateTime().toLocalDate()
+                                : null)
                 .priority(1)
                 .build();
     }
@@ -104,7 +105,8 @@ public class AIFinalOfferResponseBuilder {
     public AppraisalDataFinalOffer buildAppraisal(AppraisalDetailsDto appraisalDetails) {
         String param = appraisalDetails.getParam();
         return AppraisalDataFinalOffer.builder()
-                .uniqueKey("APP-" + param.substring(0, 4) + "-" + String.format("%06d", Long.parseLong(param.substring(4))))
+                .uniqueKey("APP-" + param.substring(0, 4) + "-"
+                        + String.format("%06d", Long.parseLong(param.substring(4))))
                 .maker(appraisalDetails.getMaker())
                 .model(appraisalDetails.getModel())
                 .year(aiMatchingResponseBuilder.parseModelYear(appraisalDetails.getYear()))
@@ -130,8 +132,12 @@ public class AIFinalOfferResponseBuilder {
         String mappedValue = desiredSaleDateMapper.mapToStandardValue(originalValue);
 
         return VehicleInfo.builder()
-                .runnable(RunnableStatus.valueOf(appraisalDetails.getDrivableStatus()))
-                .accident(Accident.valueOf(appraisalDetails.getAccidentHistory()))
+                .runnable(appraisalDetails.getDrivableStatus() != null
+                        ? RunnableStatus.valueOf(appraisalDetails.getDrivableStatus())
+                        : null)
+                .accident(appraisalDetails.getAccidentHistory() != null
+                        ? Accident.fromDisplayName(appraisalDetails.getAccidentHistory())
+                        : null)
                 .desiredSaleDate(mappedValue)
                 .build();
     }

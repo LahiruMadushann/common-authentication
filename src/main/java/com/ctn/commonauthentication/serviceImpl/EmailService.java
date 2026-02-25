@@ -7,6 +7,7 @@ import com.amazonaws.services.simpleemail.model.*;
 import com.ctn.commonauthentication.dto.InternalEmailRequest;
 import com.ctn.commonauthentication.dto.OperatorAppraisal;
 import com.ctn.commonauthentication.service.IInternalEmailService;
+import com.ctn.commonauthentication.util.SellerPortalUrls;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import org.springframework.stereotype.Service;
@@ -17,14 +18,16 @@ import java.util.List;
 
 @Service
 public class EmailService implements IInternalEmailService {
+    static SellerPortalUrls url = new SellerPortalUrls();
 
-    private static final String BUYER_PORTAL_URL = "https://development.da9f2us1k1n15.amplifyapp.com";
-    private static final String SELLER_PORTAL_URL = "https://development.da9f2us1k1n15.amplifyapp.com";
+    private static final String SELLER_PORTAL_URL = url.getSELLER_PORTAL_URL_DEV();
 
     @Override
-    public void sendAppraisalAmountEntryEmail(String receiverEmail, String endUserName) throws UnsupportedEncodingException, AddressException {
+    public void sendAppraisalAmountEntryEmail(String receiverEmail, String endUserName)
+            throws UnsupportedEncodingException, AddressException {
         InternalEmailRequest emailRequest = new InternalEmailRequest();
-        emailRequest.senderEmail = new InternetAddress(PredefinedSenders.ADMIN_SENDER_EMAIL, "CTN車一括査定", "UTF-8").toUnicodeString();
+        emailRequest.senderEmail = new InternetAddress(PredefinedSenders.ADMIN_SENDER_EMAIL, "CTN車一括査定", "UTF-8")
+                .toUnicodeString();
         emailRequest.receiverEmail = receiverEmail;
         emailRequest.subject = "【 CTN 】査定額入力のお知らせ";
         emailRequest.htmlBodyBase64 = buildAppraisalAmountEntryEmail(endUserName);
@@ -32,12 +35,13 @@ public class EmailService implements IInternalEmailService {
         sendEmail(emailRequest);
     }
 
-
     @Override
-    public void sendReviewEntryEmail(String receiverEmail, String endUserName) throws UnsupportedEncodingException, AddressException {
+    public void sendReviewEntryEmail(String receiverEmail, String endUserName)
+            throws UnsupportedEncodingException, AddressException {
         InternalEmailRequest emailRequest = new InternalEmailRequest();
         emailRequest.bccReceiverEmails = Arrays.asList(PredefinedReceivers.ADMIN_BCC_RECEIVER_EMAIL);
-        emailRequest.senderEmail = new InternetAddress(PredefinedSenders.ADMIN_SENDER_EMAIL, "CTN車一括査定", "UTF-8").toUnicodeString();
+        emailRequest.senderEmail = new InternetAddress(PredefinedSenders.ADMIN_SENDER_EMAIL, "CTN車一括査定", "UTF-8")
+                .toUnicodeString();
         emailRequest.receiverEmail = receiverEmail;
         emailRequest.subject = endUserName + "様 レビュー入力のお知らせ";
         emailRequest.htmlBodyBase64 = buildReviewEntryEmail(endUserName);
@@ -46,9 +50,11 @@ public class EmailService implements IInternalEmailService {
     }
 
     @Override
-    public void sendNewMessageNotificationEmail(String receiverEmail) throws UnsupportedEncodingException, AddressException {
+    public void sendNewMessageNotificationEmail(String receiverEmail)
+            throws UnsupportedEncodingException, AddressException {
         InternalEmailRequest emailRequest = new InternalEmailRequest();
-        emailRequest.senderEmail = new InternetAddress(PredefinedSenders.ADMIN_SENDER_EMAIL, "CTN車一括査定", "UTF-8").toUnicodeString();
+        emailRequest.senderEmail = new InternetAddress(PredefinedSenders.ADMIN_SENDER_EMAIL, "CTN車一括査定", "UTF-8")
+                .toUnicodeString();
         emailRequest.receiverEmail = receiverEmail;
         emailRequest.subject = "CTN車一括査定 - 新しいメッセージのお知らせ";
         emailRequest.htmlBodyBase64 = buildNewMessageNotificationEmail();
@@ -57,9 +63,11 @@ public class EmailService implements IInternalEmailService {
     }
 
     @Override
-    public void sendPhotoInformationUploadEmail(String receiverEmail, OperatorAppraisal appraisal, String name) throws UnsupportedEncodingException, AddressException {
+    public void sendPhotoInformationUploadEmail(String receiverEmail, OperatorAppraisal appraisal, String name)
+            throws UnsupportedEncodingException, AddressException {
         InternalEmailRequest emailRequest = new InternalEmailRequest();
-        emailRequest.senderEmail = new InternetAddress(PredefinedSenders.ADMIN_SENDER_EMAIL, "CTN車一括査定", "UTF-8").toUnicodeString();
+        emailRequest.senderEmail = new InternetAddress(PredefinedSenders.ADMIN_SENDER_EMAIL, "CTN車一括査定", "UTF-8")
+                .toUnicodeString();
         emailRequest.receiverEmail = receiverEmail;
         emailRequest.subject = "写真情報アップロードのお知らせ";
         emailRequest.htmlBodyBase64 = buildPhotoInformationUploadEmail(appraisal, name);
@@ -67,12 +75,38 @@ public class EmailService implements IInternalEmailService {
         sendEmail(emailRequest);
     }
 
+    @Override
+    public void sendPasswordResetEmail(String email, String token, Integer userId) {
+        InternalEmailRequest emailRequest = new InternalEmailRequest();
+        emailRequest.senderEmail = PredefinedSenders.ADMIN_SENDER_EMAIL;
+        emailRequest.receiverEmail = email;
+        emailRequest.subject = "CTN車一括査定 - パスワードリセット";
+        String body = buildPasswordResetEmail(token, userId);
+        emailRequest.htmlBodyBase64 = body;
+        emailRequest.textBody = body;
+        sendEmail(emailRequest);
+    }
+
+    private String buildPasswordResetEmail(String token, Integer userId) {
+        StringBuilder htmlBody = new StringBuilder();
+        htmlBody.append("CTN車一括査定のパスワードリセットリンクを送信しました。<br><br>")
+                .append("以下のリンクをクリックしてパスワードをリセットしてください。<br><br>")
+                .append("パスワードリセットリンク: <a href='" + SELLER_PORTAL_URL + "/reset-password?token=").append(token)
+                .append("&userId=").append(userId).append("'>パスワードリセット</a><br><br>")
+                .append("リンクが機能しない場合は、以下のURLをコピーしてブラウザに貼り付けてください。<br>")
+                .append(SELLER_PORTAL_URL + "/reset-password?token=").append(token).append("&userId=").append(userId)
+                .append("<br><br>")
+                .append("このメールに心当たりがない場合は、無視してください。<br><br>")
+                .append("CTN車一括査定<br>");
+        return htmlBody.toString();
+    }
+
     private String buildReviewEntryEmail(String endUserName) {
         StringBuilder htmlBody = new StringBuilder();
         htmlBody.append("お世話になっております。<br>")
                 .append("CTN車一括査定です。<br><br>")
                 .append("下記").append(endUserName).append("様よりレビューが入力されましたことをお知らせいたします。<br><br>")
-                .append("【" + BUYER_PORTAL_URL + "】<br>");
+                .append("【" + SELLER_PORTAL_URL + "】<br>");
         return htmlBody.toString();
     }
 
@@ -81,7 +115,7 @@ public class EmailService implements IInternalEmailService {
         htmlBody.append(endUserName).append("様<br>")
                 .append("CTN車一括査定でございます。<br><br>")
                 .append("この度、査定依頼に対し、査定額が入力されましたのでお知らせいたします。<br>")
-                .append(BUYER_PORTAL_URL + "<br>")
+                .append(SELLER_PORTAL_URL + "<br>")
                 .append("ご不明な点がございましたら、いつでもお気軽にお問い合わせくださいませ。<br>")
                 .append("引き続き、CTN車一括査定をどうぞよろしくお願い申し上げます。<br>");
         return htmlBody.toString();
@@ -105,10 +139,10 @@ public class EmailService implements IInternalEmailService {
             destination = destination.withBccAddresses(bccAddresses);
         }
 
-        //String decodedHtmlBody = new String(java.util.Base64.getDecoder().decode(request.htmlBodyBase64));
-        AmazonSimpleEmailService client =
-                AmazonSimpleEmailServiceClientBuilder.standard()
-                        .withRegion(Regions.AP_NORTHEAST_1).build();
+        // String decodedHtmlBody = new
+        // String(java.util.Base64.getDecoder().decode(request.htmlBodyBase64));
+        AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard()
+                .withRegion(Regions.AP_NORTHEAST_1).build();
 
         SendEmailRequest finalizedEmailRequest = new SendEmailRequest()
                 .withDestination(destination).withMessage(new Message()
@@ -138,7 +172,7 @@ public class EmailService implements IInternalEmailService {
                 .append("    <p>新しいメッセージが届いております。<br>\n")
                 .append("    下記リンクよりログインして、メッセージ内容をご確認ください。</p>\n")
                 .append("\n")
-                .append("    <p><a href=\"").append(BUYER_PORTAL_URL).append("\">ログインURL</a></p>\n")
+                .append("    <p><a href=\"").append(SELLER_PORTAL_URL).append("\">ログインURL</a></p>\n")
                 .append("\n")
                 .append("    <p>今後ともよろしくお願いいたします。<br>\n")
                 .append("    CTN車一括査定</p>\n")
@@ -152,7 +186,7 @@ public class EmailService implements IInternalEmailService {
         htmlBody.append("お世話になっております。<br>")
                 .append("CTN車一括査定です。<br><br>")
                 .append(name).append("様の車両写真情報がアップロードされましたことをお知らせいたします。<br>")
-                .append(BUYER_PORTAL_URL +  "<br><br>")
+                .append(SELLER_PORTAL_URL + "<br><br>")
                 .append("ご不明な点がございましたら、お気軽にお問い合わせくださいませ。<br>")
                 .append("今後とも、CTN車一括査定をよろしくお願い申し上げます。<br>");
         return htmlBody.toString();

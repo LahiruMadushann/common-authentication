@@ -5,8 +5,10 @@ import com.ctn.commonauthentication.dto.*;
 import com.ctn.commonauthentication.entity.GlobalUser;
 import com.ctn.commonauthentication.entity.UserProfile;
 import com.ctn.commonauthentication.repository.GlobalUserRepository;
+import com.ctn.commonauthentication.repository.UserModelRepository;
 import com.ctn.commonauthentication.repository.UserProfileRepository;
 import com.ctn.commonauthentication.security.JwtUtil;
+import com.ctn.commonauthentication.service.IInternalEmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,10 +30,12 @@ public class AuthService {
 
     private final GlobalUserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final UserModelRepository userModelRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final IInternalEmailService emailService;
 
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
@@ -42,7 +46,11 @@ public class AuthService {
         GlobalUser user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String accessToken = jwtUtil.generateAccessToken(userDetails, user.getRole().name());
+        String userId = userModelRepository.findByUserId(user.getEmail())
+                .map(u -> String.valueOf(u.getId()))
+                .orElse(String.valueOf(user.getId()));
+
+        String accessToken = jwtUtil.generateAccessToken(userDetails, user.getRole().name(), userId);
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
         user.setToken(refreshToken);
@@ -69,7 +77,10 @@ public class AuthService {
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
-        String newAccessToken = jwtUtil.generateAccessToken(userDetails, user.getRole().name());
+        String userId = userModelRepository.findByUserId(user.getEmail())
+                .map(u -> String.valueOf(u.getId()))
+                .orElse(String.valueOf(user.getId()));
+        String newAccessToken = jwtUtil.generateAccessToken(userDetails, user.getRole().name(), userId);
         // Rotate the refresh token for improved security
         String newRefreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
@@ -182,8 +193,8 @@ public class AuthService {
         user.setPasswordResetExpiresAt(LocalDateTime.now().plusHours(24));
         userRepository.save(user);
 
-        // In production: send email with reset token via AWS SES
-        log.info("[PASSWORD RESET] Token for {}: {}", user.getEmail(), resetToken);
+        emailService.sendPasswordResetEmail(user.getEmail(), resetToken, user.getId().intValue());
+        log.info("[PASSWORD RESET] Reset email sent to {}", user.getEmail());
     }
 
     @Transactional

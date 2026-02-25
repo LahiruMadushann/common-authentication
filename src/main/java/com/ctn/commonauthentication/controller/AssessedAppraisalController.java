@@ -35,9 +35,8 @@ public class AssessedAppraisalController {
     private final IShopConditionEmailsRepository shopEmailRepository;
 
     @GetMapping
-    public ResponseEntity<Optional<AssessedPreviewDto>> getAssessedById(@RequestParam Long appraisalId, @RequestParam(required = false) Integer shopId, @RequestParam(required = false) Integer userId) {
-
-
+    public ResponseEntity<Optional<AssessedPreviewDto>> getAssessedById(@RequestParam Long appraisalId,
+            @RequestParam(required = false) Integer shopId, @RequestParam(required = false) Integer userId) {
 
         if (shopId == null && userId == null) {
             return new ResponseEntity<>(Optional.empty(), HttpStatus.BAD_REQUEST);
@@ -60,18 +59,21 @@ public class AssessedAppraisalController {
         AssessedId id = new AssessedId(appraisalId, shopId);
         Optional<Assessed> assessed = assessedAppraisalService.findById(id);
         Optional<AssessedPreviewDto> assessedPreviewDto = assessed.map(this::convertToDto);
-        //add memos
-        assessedPreviewDto.ifPresent(assessedPreviewDto1 -> assessedPreviewDto1.setMemos(assessedMemoService.findAllById_AppraisalidAndId_Shopid(appraisalId, finalShopId)));
+        // add memos
+        assessedPreviewDto.ifPresent(assessedPreviewDto1 -> assessedPreviewDto1
+                .setMemos(assessedMemoService.findAllById_AppraisalidAndId_Shopid(appraisalId, finalShopId)));
 
         return new ResponseEntity<>(assessedPreviewDto, HttpStatus.OK);
     }
 
     @PatchMapping
-    public ResponseEntity<?> updateAssessedById(@RequestParam Long appraisalId, @RequestParam(required = false) Integer shopId,@RequestParam(required = false) Integer userId, @RequestBody AssessedPreviewDto assessedPreviewDto) {
+    public ResponseEntity<?> updateAssessedById(@RequestParam Long appraisalId,
+            @RequestParam(required = false) Integer shopId, @RequestParam(required = false) Integer userId,
+            @RequestBody AssessedPreviewDto assessedPreviewDto) {
         if (assessedPreviewDto.getAdminPrices() != null && !assessedPreviewDto.getAdminPrices().isEmpty()) {
             List<AssessedPreviewDto> updatedResults = new ArrayList<>();
 
-            for ( AdminPrices adminPrice : assessedPreviewDto.getAdminPrices()) {
+            for (AdminPrices adminPrice : assessedPreviewDto.getAdminPrices()) {
                 Integer currentShopId = adminPrice.getShopid();
 
                 if (currentShopId == null) {
@@ -139,10 +141,13 @@ public class AssessedAppraisalController {
 
             Assessed assessed = existing.get();
 
-            boolean isValueChanged = assessedPreviewDto.getValue() != null && !assessedPreviewDto.getValue().equals(assessed.getValue());
+            boolean isValueChanged = assessedPreviewDto.getValue() != null
+                    && !assessedPreviewDto.getValue().equals(assessed.getValue());
             if (isValueChanged) {
                 try {
-                    internalEmailService.sendAppraisalAmountEntryEmail(appraisalRequestRepo.findById(appraisalId).get().getCustomerEmail(), appraisalRequestRepo.findById(appraisalId).get().getCustomerName());
+                    internalEmailService.sendAppraisalAmountEntryEmail(
+                            appraisalRequestRepo.findById(appraisalId).get().getCustomerEmail(),
+                            appraisalRequestRepo.findById(appraisalId).get().getCustomerName());
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException(e);
                 } catch (AddressException e) {
@@ -150,16 +155,21 @@ public class AssessedAppraisalController {
                 }
             }
 
-            boolean isStarValueChanged = assessedPreviewDto.getStarValue() != null && !assessedPreviewDto.getStarValue().equals(assessed.getStarValue());
-            boolean isStarSupportChanged = assessedPreviewDto.getStarSupport() != null && !assessedPreviewDto.getStarSupport().equals(assessed.getStarSupport());
-            boolean isStarRecommendationChanged = assessedPreviewDto.getStarRecommendation() != null && !assessedPreviewDto.getStarRecommendation().equals(assessed.getStarRecommendation());
-            boolean isReviewChanged = assessedPreviewDto.getReview() != null && !assessedPreviewDto.getReview().equals(assessed.getReview());
+            boolean isStarValueChanged = assessedPreviewDto.getStarValue() != null
+                    && !assessedPreviewDto.getStarValue().equals(assessed.getStarValue());
+            boolean isStarSupportChanged = assessedPreviewDto.getStarSupport() != null
+                    && !assessedPreviewDto.getStarSupport().equals(assessed.getStarSupport());
+            boolean isStarRecommendationChanged = assessedPreviewDto.getStarRecommendation() != null
+                    && !assessedPreviewDto.getStarRecommendation().equals(assessed.getStarRecommendation());
+            boolean isReviewChanged = assessedPreviewDto.getReview() != null
+                    && !assessedPreviewDto.getReview().equals(assessed.getReview());
 
-            //If starts recommendaction value support or review is not null
+            // If starts recommendaction value support or review is not null
             if (isStarValueChanged || isStarSupportChanged || isStarRecommendationChanged || isReviewChanged) {
                 shopEmailRepository.findByIdShopId(shopId).forEach(shopEmail -> {
                     try {
-                        internalEmailService.sendReviewEntryEmail(shopEmail.getId().getEmail(), appraisalRequestRepo.findById(appraisalId).get().getCustomerName());
+                        internalEmailService.sendReviewEntryEmail(shopEmail.getId().getEmail(),
+                                appraisalRequestRepo.findById(appraisalId).get().getCustomerName());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -174,19 +184,18 @@ public class AssessedAppraisalController {
                 assessed.setSupplementary(assessedPreviewDto.getSupplementary());
             }
 
-            if (assessedPreviewDto.is_rejected_by_shop() != assessed.isIs_rejected_by_shop()) {
-                assessed.setIs_rejected_by_shop(assessedPreviewDto.is_rejected_by_shop());
+            if (assessedPreviewDto.getIs_rejected_by_shop() != null
+                    && assessedPreviewDto.getIs_rejected_by_shop() != assessed.isIs_rejected_by_shop()) {
+                assessed.setIs_rejected_by_shop(assessedPreviewDto.getIs_rejected_by_shop());
             }
 
-
-            if(assessedPreviewDto.getValue() != null){
+            if (assessedPreviewDto.getValue() != null) {
                 assessed.setValue(assessedPreviewDto.getValue());
             }
 
-            if(assessedPreviewDto.getStorePurchaseDateTime() != null){
+            if (assessedPreviewDto.getStorePurchaseDateTime() != null) {
                 assessed.setStorePurchaseDateTime(assessedPreviewDto.getStorePurchaseDateTime());
             }
-
 
             if (assessedPreviewDto.getFinalOffer() != null) {
                 assessed.setFinalOffer(assessedPreviewDto.getFinalOffer());
@@ -258,7 +267,7 @@ public class AssessedAppraisalController {
         dto.setShopid(assessed.getId().getShopid());
         dto.setEmail_sent_time(assessed.getEmail_sent_time());
         dto.setDraft_email_sent_time(assessed.getDraft_email_sent_time());
-        dto.set_rejected_by_shop(assessed.isIs_rejected_by_shop());
+        dto.setIs_rejected_by_shop(assessed.isIs_rejected_by_shop());
         dto.setAssessedEx(assessed.getAssessed_ex());
         dto.setUpdatedAt(assessed.getUpdatedAt());
         dto.setStatus(assessed.getStatus());

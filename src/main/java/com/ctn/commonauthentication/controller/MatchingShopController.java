@@ -20,7 +20,7 @@ public class MatchingShopController {
     private final ShopInvoiceService shopInvoiceService;
 
     @GetMapping("/shops")
-    public ResponseEntity<List<UserShopAppraisalDTO>> getDetails(@RequestParam Integer userId) {
+    public ResponseEntity<List<UserShopAppraisalDTO>> getDetails(@RequestParam("userId") Integer userId) {
         List<UserShopAppraisalDTO> details = shopInvoiceService.getDetailsByUserId(userId);
         if (details.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

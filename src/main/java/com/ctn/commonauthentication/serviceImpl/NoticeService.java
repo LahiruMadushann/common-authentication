@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -61,5 +62,17 @@ public class NoticeService implements INoticeService {
 
         return Optional.empty();
 
+    }
+
+    @Override
+    public Page<PublicNoticeDto> getPublicNotices(List<NoticeCategory> accessibleNoticeCategories, Pageable pageable) {
+        NoticeCategory noticeCategory = null;
+        if (accessibleNoticeCategories.contains(NoticeCategory.BUYER) && !accessibleNoticeCategories.contains(NoticeCategory.SELLER)) {
+            noticeCategory = NoticeCategory.BUYER;
+        } else if (accessibleNoticeCategories.contains(NoticeCategory.SELLER) && !accessibleNoticeCategories.contains(NoticeCategory.BUYER)) {
+            noticeCategory = NoticeCategory.SELLER;
+        }
+
+        return noticeRepository.findPublicNotices(NoticeApprovalStatus.APPROVED, Timestamp.valueOf(LocalDateTime.now()), noticeCategory ,  pageable);
     }
 }

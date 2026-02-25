@@ -22,7 +22,7 @@ public class AppraisalController {
     private final AppraisalRequestService appraisalRequestService;
 
     @GetMapping("/information")
-    public ResponseEntity<Object> getAppraisalInformation(@RequestParam @NotNull Integer userId) {
+    public ResponseEntity<Object> getAppraisalInformation(@RequestParam("userId") @NotNull Integer userId) {
         if (userId == null ) {
             return ResponseEntity.badRequest().body("User Id is required");
         }
