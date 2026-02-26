@@ -47,11 +47,11 @@ public class BuyerInformationService implements IBuyerInfomationService {
                 // buyerDetailsDto.setAppealStatement((String) column[41]);
                 // buyerDetailsDto.setBusinessHours((String) column[42]);
 
-                if (column[8] != null){
+                if (column[8] != null) {
                     buyerDetailsDto.setShopuserid((Integer) column[8]);
                 }
 
-                if (column[5] != null){
+                if (column[5] != null) {
                     buyerDetailsDto.setShopTypeEnum((ShopTypeEnum.valueOf((String) column[5])));
                 }
 
@@ -65,17 +65,18 @@ public class BuyerInformationService implements IBuyerInfomationService {
                 buyerDetailsDto.setManicipalities((String) column[21]);
                 buyerDetailsDto.setAddress((String) column[22]);
 
-                try{
+                try {
                     buyerDetailsDto.setCancellationCategory(CancellationCategory.valueOf((String) column[41]));
-                } catch (Exception ignored){}
+                } catch (Exception ignored) {
+                }
 
                 buyerDetailsDto.setAppealStatement((String) column[42]);
                 buyerDetailsDto.setBusinessHours((String) column[43]);
-                LocalDateTime scheduleDate = column[44] != null ? ((Timestamp) column[44]).toLocalDateTime() : null;
+                LocalDateTime scheduleDate = column[44] != null ? (LocalDateTime) column[44] : null;
                 buyerDetailsDto.setScheduledDate(scheduleDate);
 
                 // store subscription type detection logic
-                if (column[11] != null && column[12] != null) { //check if both general and special
+                if (column[11] != null && column[12] != null) { // check if both general and special
 
                     if (column[14] != null) {
                         buyerDetailsDto.setShopExclusivity(ShopExclusivity.valueOf((String) column[14]));
@@ -104,14 +105,12 @@ public class BuyerInformationService implements IBuyerInfomationService {
 
                 }
 
-
-                if (column[16] != null && column[17] != null && !column[16].equals(column[17])){
+                if (column[16] != null && column[17] != null && !column[16].equals(column[17])) {
                     buyerDetailsDto.setHeadBranchId((Long) column[17]);
                 }
 
-
-                //buyerDetailsDto.addBuyerEmailDto((String) column[18], (Integer) column[38]);
-                //buyerDetailsDto.addShopAreaDto(getShopAreaDto(column));
+                // buyerDetailsDto.addBuyerEmailDto((String) column[18], (Integer) column[38]);
+                // buyerDetailsDto.addShopAreaDto(getShopAreaDto(column));
                 buyerDetailsDto.addBillingDataInvoices(getBillingInvoiceDto(column));
                 buyerDetailsDto.addShopVactions(getShopVacationDto(column));
                 buyerDetailsDto.addShopHolidays(getShopHolidaysDto(column));
@@ -121,13 +120,13 @@ public class BuyerInformationService implements IBuyerInfomationService {
 
             }
 
-            if (buyerDetailsDto.getShopTypeEnum() == null){
+            if (buyerDetailsDto.getShopTypeEnum() == null) {
                 buyerDetailsDto.setShopTypeEnum(ShopTypeEnum.HEAD_BRANCH);
             }
 
-            if (buyerDetailsDto.getShopTypeEnum().equals(ShopTypeEnum.HEAD_BRANCH)){
+            if (buyerDetailsDto.getShopTypeEnum().equals(ShopTypeEnum.HEAD_BRANCH)) {
 
-                if (branchMapRepo.findAllByHeadBranchId(buyerDetailsDto.getId()).size() > 1){
+                if (branchMapRepo.findAllByHeadBranchId(buyerDetailsDto.getId()).size() > 1) {
                     buyerDetailsDto.setDisableShopType(true);
                 }
 
@@ -173,7 +172,8 @@ public class BuyerInformationService implements IBuyerInfomationService {
             }
 
             buyerDetailsDto.setStarValue(amountStarValue == 0 ? 0 : sumStarValue / amountStarValue);
-            buyerDetailsDto.setStarRecommendation(amountStarRecommend == 0 ? 0 : sumStarRecommend / amountStarRecommend);
+            buyerDetailsDto
+                    .setStarRecommendation(amountStarRecommend == 0 ? 0 : sumStarRecommend / amountStarRecommend);
             buyerDetailsDto.setStarSupport(amountStarSupport == 0 ? 0 : sumStarSupport / amountStarSupport);
 
             return buyerDetailsDto;
@@ -212,8 +212,8 @@ public class BuyerInformationService implements IBuyerInfomationService {
     private static ShopVacationDto getShopVacationDto(Object[] column) {
         ShopVacationDto shopVacationDto = new ShopVacationDto();
         shopVacationDto.setId((Integer) column[30]);
-        shopVacationDto.setStart((Timestamp) column[31]);
-        shopVacationDto.setEnd((Timestamp)  column[32]);
+        shopVacationDto.setStart(column[31] != null ? Timestamp.valueOf((LocalDateTime) column[31]) : null);
+        shopVacationDto.setEnd(column[32] != null ? Timestamp.valueOf((LocalDateTime) column[32]) : null);
         return shopVacationDto;
     }
 
