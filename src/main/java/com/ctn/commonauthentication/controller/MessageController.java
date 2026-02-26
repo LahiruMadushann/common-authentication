@@ -19,13 +19,13 @@ public class MessageController {
     private final MessageService messageService;
 
     @GetMapping("/receiver/{receiverId}")
-    public ResponseEntity<List<MessageDTO>> getMessagesForReceiver(@PathVariable Long receiverId){
+    public ResponseEntity<List<MessageDTO>> getMessagesForReceiver(@PathVariable("receiverId") Long receiverId) {
         List<MessageDTO> messages = messageService.getMessagesForReceiver(receiverId);
         return ResponseEntity.ok(messages);
     }
 
     @GetMapping("/buyer")
-    public ResponseEntity<?> getUserId(@RequestParam Integer shopid) {
+    public ResponseEntity<?> getUserId(@RequestParam("shopid") Integer shopid) {
         try {
             Integer id = messageService.getBuyer(shopid);
             if (id == null) {
@@ -33,16 +33,17 @@ public class MessageController {
             }
             return ResponseEntity.ok(id);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while fetching the user ID.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while fetching the user ID.");
         }
     }
 
     @PostMapping("/send")
-    public ResponseEntity<Message> sendMessage(@RequestBody Message message){
+    public ResponseEntity<Message> sendMessage(@RequestBody Message message) {
         try {
             Message messageNew = messageService.sendMessage(message);
             return ResponseEntity.ok(messageNew);
-        } catch(ResourceNotFoundException ex) {
+        } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(null);
         }
