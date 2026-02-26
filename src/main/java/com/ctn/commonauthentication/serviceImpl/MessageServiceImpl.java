@@ -59,7 +59,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Message sendMessage(Message message) {
-        if (userMapper.findById(message.getReceiverId()) == null ) {
+        if (userMapper.findById(message.getReceiverId()) == null) {
             throw new ResourceNotFoundException("Receiver", "ID", message.getReceiverId());
         }
         if (userMapper.findById(message.getSenderId()) == null) {
@@ -71,8 +71,7 @@ public class MessageServiceImpl implements MessageService {
 
         // Find the most recent message sent by the receiver to the sender
         Optional<Message> previousMessageOpt = messageRepository.findTopBySenderIdAndReceiverIdOrderByTimeStampDesc(
-                message.getReceiverId(),message.getSenderId()
-        );
+                message.getReceiverId(), message.getSenderId());
 
         // get user by id
         User user = userMapper.findById(message.getReceiverId());
@@ -91,23 +90,24 @@ public class MessageServiceImpl implements MessageService {
 
             // Check if the time difference is greater than 30 minutes
             Duration duration = Duration.between(previousMessage.getTimeStamp(), currentTimestamp);
-            if (duration.toMinutes() > 30 && !previousMessage.isResponded() && !previousMessage.isNotified()) {
+            if (duration.toMinutes() > 30 && !Boolean.TRUE.equals(previousMessage.getIsResponded())
+                    && !Boolean.TRUE.equals(previousMessage.getIsNotified())) {
                 // send the email notification
 
-                try{
-//                    emailService.unrespondedMessagesEmail(user.getUsername(),List.of(previousMessage));
-                }catch(Exception e){
+                try {
+                    // emailService.unrespondedMessagesEmail(user.getUsername(),List.of(previousMessage));
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 log.info("Notified the receiver with ID:" + previousMessage.getReceiverId());
-                previousMessage.setNotified(true);
+                previousMessage.setIsNotified(true);
                 messageRepository.save(previousMessage);
             }
             // Mark the previous message as responded
-            previousMessage.setResponded(true);
+            previousMessage.setIsResponded(true);
             messageRepository.save(previousMessage);
-        }else{
-            message.setFirstTime(true);
+        } else {
+            message.setIsFirstTime(true);
         }
         message.setTimeStamp(currentTimestamp);
         messageRepository.save(message);
@@ -127,7 +127,6 @@ public class MessageServiceImpl implements MessageService {
                 (String) result[8],
                 (String) result[9],
                 (String) result[10],
-                (String) result[11]
-        );
+                (String) result[11]);
     }
 }

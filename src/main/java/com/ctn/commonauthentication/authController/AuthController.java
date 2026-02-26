@@ -25,6 +25,9 @@ public class AuthController {
     public ResponseEntity<?> register(
             @RequestHeader(value = "X-Request-ID", required = false) String requestId,
             @Valid @RequestBody RegisterRequest request) {
+
+        String traceId = (requestId != null && !requestId.isBlank()) ? requestId : UUID.randomUUID().toString();
+
         try {
             RegisterResponse response = authService.register(request);
 
@@ -33,7 +36,7 @@ public class AuthController {
                         .body(new ErrorResponseWithTrace(
                                 "DUPLICATE_EMAIL",
                                 "User with this email already exists.",
-                                UUID.randomUUID().toString()));
+                                traceId));
             }
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -42,7 +45,7 @@ public class AuthController {
                     .body(new ErrorResponseWithTrace(
                             "VALIDATION_ERROR",
                             e.getMessage(),
-                            UUID.randomUUID().toString()));
+                            traceId));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -128,6 +131,7 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(
             @RequestHeader(value = "X-Request-ID", required = false) String requestId,
             @Valid @RequestBody PasswordResetExecuteRequest request) {
+        String traceId = (requestId != null && !requestId.isBlank()) ? requestId : UUID.randomUUID().toString();
         try {
             authService.resetPassword(request);
             return ResponseEntity.ok(Map.of("message", "パスワードの再設定が完了しました。 / Password reset completed successfully."));
@@ -138,7 +142,7 @@ public class AuthController {
                         .body(new ErrorResponseWithTrace(
                                 "INVALID_TOKEN",
                                 "Reset token is invalid or expired.",
-                                UUID.randomUUID().toString()));
+                                traceId));
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

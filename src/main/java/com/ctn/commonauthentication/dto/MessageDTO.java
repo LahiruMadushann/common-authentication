@@ -13,17 +13,17 @@ public class MessageDTO {
     private Long receiverId;
     private String content;
     private LocalDateTime createdAt;
-    private boolean isResponded;
-    private boolean isNotified;
-    private boolean isFirstTime;
+    private Boolean isResponded;
+    private Boolean isNotified;
+    private Boolean isFirstTime;
     private String fileUrl;
     private String fileName;
     private String fileType;
     private String receiverName;
 
     public MessageDTO(Long id, Long senderId, Long receiverId, String content, LocalDateTime createdAt,
-                      boolean isResponded, boolean isNotified, boolean isFirstTime, String fileUrl,
-                      String fileName, String fileType, String receiverName) {
+            Boolean isResponded, Boolean isNotified, Boolean isFirstTime, String fileUrl,
+            String fileName, String fileType, String receiverName) {
         this.id = id;
         this.senderId = senderId;
         this.receiverId = receiverId;

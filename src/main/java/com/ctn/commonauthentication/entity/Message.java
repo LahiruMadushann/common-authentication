@@ -35,13 +35,13 @@ public class Message {
     private LocalDateTime timeStamp;
 
     @Column(columnDefinition = "boolean default false")
-    private boolean isResponded;
+    private Boolean isResponded;
 
     @Column(columnDefinition = "boolean default false")
-    private boolean isNotified;
+    private Boolean isNotified;
 
     @Column(name = "is_first_time", columnDefinition = "boolean default false")
-    private boolean isFirstTime;
+    private Boolean isFirstTime;
 
     @Column(name = "fileurl")
     private String fileUrl;
