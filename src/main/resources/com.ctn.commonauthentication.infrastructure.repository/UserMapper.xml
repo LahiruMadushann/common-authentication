@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ctn.commonauthentication.repository.UserMapper">
+
+    <resultMap id="User" type="com.ctn.commonauthentication.entity.User">
+        <result property="username" column="user_id"/>
+        <result property="password" column="password"/>
+        <result property="role"     column="role"/>
+    </resultMap>
+
+    <insert id="add">
+        insert into users
+            (user_id, password, role, created_at, updated_at, enable) values
+            (#{user_id}, #{pass}, #{role}, current_timestamp, current_timestamp, true)
+    </insert>
+
+    <select id="getId" resultType="Integer">
+        select id from users where user_id = #{user_id}
+    </select>
+
+    <select id="find" resultMap="User">
+        select * from users where user_id = #{username}
+    </select>
+
+    <select id="findById" resultMap="User">
+        select * from users where id = #{id}
+    </select>
+</mapper>
