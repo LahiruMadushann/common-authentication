@@ -30,15 +30,18 @@ public class AppraisalRequestInformationController {
     private final ShopRepository shopRepository;
 
     @PatchMapping("/{id}/photos")
-    public ResponseEntity<AppraisalRequestInformation> updatePhotos(@PathVariable Long id, @RequestBody UpdatePhotosDTO dto) {
+    public ResponseEntity<AppraisalRequestInformation> updatePhotos(@PathVariable("id") Long id,
+            @RequestBody UpdatePhotosDTO dto) {
         Optional<AppraisalRequestInformation> updatedAppraisal = service.updatePhotos(id, dto);
 
         OperatorAppraisal operatorAppraisal = appraisalRequestMapper.loadAppraisalById(id);
 
-        assessedRepo.findAllByAppraisalid(id.toString()).forEach(assessed -> {;
+        assessedRepo.findAllByAppraisalid(id.toString()).forEach(assessed -> {
+            ;
             shopEmailRepository.findByIdShopId(assessed.getShopid()).forEach(shopEmail -> {
                 try {
-                    internalEmailService.sendPhotoInformationUploadEmail(shopEmail.getId().getEmail(), operatorAppraisal, shopRepository.findById(assessed.getShopid()).get().getName());
+                    internalEmailService.sendPhotoInformationUploadEmail(shopEmail.getId().getEmail(),
+                            operatorAppraisal, shopRepository.findById(assessed.getShopid()).get().getName());
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException(e);
                 } catch (AddressException e) {
